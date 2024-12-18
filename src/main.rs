@@ -26,7 +26,7 @@ fn main() {
     println!(
         "{}",
         format!(
-            "I found {} files containing '{}' in your device",
+            "I found {} files 📁 containing '{}' in your device",
             file_count.green().bold(),
             filename.green().bold()
         )

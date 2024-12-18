@@ -22,13 +22,17 @@ pub fn search_files(filename: &str) -> Vec<PathBuf> {
     let walker = WalkBuilder::new("/").build();
 
     let filecount = Arc::new(AtomicUsize::new(0));
+    let lookedcount = Arc::new(AtomicUsize::new(0));
 
     let start = Instant::now();
 
     let results: Vec<PathBuf> = walker
         .into_iter()
         .filter_map(|entry| entry.ok())
-        .filter(|entry| entry.file_name().to_string_lossy().contains(filename))
+        .filter(|entry| {
+            lookedcount.fetch_add(1, Ordering::SeqCst);
+            entry.file_name().to_string_lossy().contains(filename)
+        })
         .map(|entry| {
             filecount.fetch_add(1, Ordering::SeqCst);
             entry.path().to_path_buf()
@@ -51,7 +55,8 @@ pub fn search_files(filename: &str) -> Vec<PathBuf> {
     println!(
         "{}",
         format!(
-            "The time taken to find your files is {} seconds {}",
+            "I looked at {} files in your device 💻 in {} seconds {}",
+            lookedcount.load(Ordering::SeqCst).to_string().green(),
             duration.to_string().green(),
             "⚡"
         )
@@ -73,7 +78,7 @@ pub fn display_and_select(result: Vec<PathBuf>) {
     }
 
     let selected_file: Result<String, InquireError> =
-        Select::new("Select a file to open", result_str).prompt();
+        Select::new("Select a file 📁 to open", result_str).prompt();
 
     match selected_file {
         Ok(file) => {
