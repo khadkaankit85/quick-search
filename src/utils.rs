@@ -1,5 +1,5 @@
+use colored::*;
 use ignore::WalkBuilder;
-
 use inquire::{error::InquireError, Select};
 use std::{
     env,
@@ -48,7 +48,16 @@ pub fn search_files(filename: &str) -> Vec<PathBuf> {
     */
 
     let duration = start.elapsed().as_secs_f64();
-    println!("The time taken to find your files is {duration} seconds");
+    println!(
+        "{}",
+        format!(
+            "The time taken to find your files is {} seconds {}",
+            duration.to_string().green(),
+            "⚡"
+        )
+        .cyan()
+        .bold()
+    );
     results
 }
 
@@ -68,11 +77,20 @@ pub fn display_and_select(result: Vec<PathBuf>) {
 
     match selected_file {
         Ok(file) => {
-            println!("You have selected {file}");
+            println!(
+                "{}",
+                format!("Opening {} just for you 💖", file.green().bold())
+                    .magenta()
+                    .italic()
+                    .underline()
+            );
             open_file_explorer(&file);
         }
         Err(_) => {
-            println!("You have exited the program");
+            println!(
+                "{}",
+                "You have exited the program 👋".bold().green().underline()
+            );
         }
     };
 }
@@ -87,7 +105,7 @@ fn open_file_explorer(filepath: &str) {
             "macos" => "open",
             "windows" => "explorer",
             _ => {
-                println!("Your OS is not supported");
+                println!("{}", "Your OS is not supported ⚠️".bold().red().underline());
                 return;
             }
         };
