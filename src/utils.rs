@@ -1,12 +1,10 @@
-use crossterm::{
-    execute,
-    terminal::{Clear, ClearType},
-};
 use ignore::WalkBuilder;
 
+use inquire::{error::InquireError, Select};
 use std::{
-    io::{stdout, Result},
-    path::PathBuf,
+    env,
+    path::{Path, PathBuf},
+    process::Command,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -53,18 +51,60 @@ pub fn search_files(filename: &str) -> Vec<PathBuf> {
     println!("The time taken to find your files is {duration} seconds");
     results
 }
-pub fn display_and_select(result: Vec<PathBuf>) -> Option<String> {
-    println!("Found {} files containing '{}'", result.len(), "filename");
 
-    println!("Please select a file to open (or 'q' to quit):");
-    None
+pub fn display_and_select(result: Vec<PathBuf>) {
+    let result_str: Vec<String> = result
+        .iter()
+        .map(|path| path.to_string_lossy().to_string())
+        .collect();
+
+    if result_str.len() == 1 {
+        open_file_explorer(&result_str[0]);
+        return;
+    }
+
+    let selected_file: Result<String, InquireError> =
+        Select::new("Select a file to open", result_str).prompt();
+
+    match selected_file {
+        Ok(file) => {
+            println!("You have selected {file}");
+            open_file_explorer(&file);
+        }
+        Err(_) => {
+            println!("You have exited the program");
+        }
+    };
 }
 
+fn open_file_explorer(filepath: &str) {
+    let path = Path::new(filepath);
+
+    if let Some(parent_path) = path.parent() {
+        let os = env::consts::OS;
+        let command = match os {
+            "linux" => "xdg-open",
+            "macos" => "open",
+            "windows" => "explorer",
+            _ => {
+                println!("Your OS is not supported");
+                return;
+            }
+        };
+
+        let _ = Command::new(command)
+            .arg(parent_path)
+            .spawn()
+            .expect("Failed to open file");
+    } else {
+        println!("Sorry We weren't expecting that:(")
+    }
+}
+
+/*
 #[allow(dead_code)]
 pub fn clear_terminal() -> Result<()> {
-    execute!(
-        stdout(),
-        Clear(ClearType::All) // Correct enum variant
-    )?;
+    execute!(stdout(), Clear(ClearType::All))?;
     Ok(())
 }
+*/

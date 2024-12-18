@@ -14,7 +14,7 @@ fn main() {
 
     let results = utils::search_files(&filename);
 
-    println!("Found {:?} files containing ", results);
+    println!("Found {} files containing '{}'", results.len(), &filename);
 
     utils::display_and_select(results);
 }
