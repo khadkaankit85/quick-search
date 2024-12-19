@@ -110,17 +110,25 @@ fn open_file_explorer(filepath: &str) {
             "macos" => "open",
             "windows" => "explorer",
             _ => {
-                println!("{}", "Your OS is not supported ⚠️".bold().red().underline());
+                println!("Your OS is not supported ⚠️");
                 return;
             }
         };
 
-        let _ = Command::new(command)
-            .arg(parent_path)
-            .spawn()
-            .expect("Failed to open file");
+        let args = if os == "windows" {
+            vec!["/select,", filepath]
+        } else {
+            vec![parent_path.to_str().unwrap()]
+        };
+
+        let result = Command::new(command).args(args).spawn();
+
+        match result {
+            Ok(_) => println!("File Explorer opened successfully."),
+            Err(e) => eprintln!("Failed to open File Explorer: {}", e),
+        }
     } else {
-        println!("Sorry We weren't expecting that:(")
+        println!("Invalid path: Unable to determine parent directory.");
     }
 }
 
