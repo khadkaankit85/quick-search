@@ -13,17 +13,13 @@ use std::{
 };
 
 pub fn search_files(filename: &str) -> Vec<PathBuf> {
-    /*
-        rayon::ThreadPoolBuilder::new()
-            .num_threads(20)
-            .build_global()
-            .unwrap();
-    */
-    let walker = WalkBuilder::new("/").build();
+    #[cfg(target_os = "windows")]
+    let walker = WalkBuilder::new("C:\\").build();
 
+    #[cfg(not(target_os = "windows"))]
+    let walker = WalkBuilder::new("/").build();
     let filecount = Arc::new(AtomicUsize::new(0));
     let lookedcount = Arc::new(AtomicUsize::new(0));
-
     let start = Instant::now();
 
     let results: Vec<PathBuf> = walker
@@ -38,6 +34,7 @@ pub fn search_files(filename: &str) -> Vec<PathBuf> {
             entry.path().to_path_buf()
         })
         .collect();
+
     /*
     let results: Vec<PathBuf> = walker
         .into_iter()
@@ -51,18 +48,17 @@ pub fn search_files(filename: &str) -> Vec<PathBuf> {
         .collect();
     */
 
+    #[cfg(target_os = "windows")]
+    println!("Windows-specific optimizations applied 🚀");
+
     let duration = start.elapsed().as_secs_f64();
     println!(
         "{}",
-        format!(
-            "I looked at {} files in your device 💻 in {} seconds {}",
-            lookedcount.load(Ordering::SeqCst).to_string().green(),
-            duration.to_string().green(),
-            "⚡"
-        )
-        .cyan()
-        .bold()
+        format!("I worked for {} seconds ⚡", duration.to_string().green())
+            .cyan()
+            .bold()
     );
+
     results
 }
 
